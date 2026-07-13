@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cine'Mines</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="dark">
+    <!-- Filter Sidebar -->
+    <div id="filter-sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h2>Filtres</h2>
+            <button id="close-sidebar-btn" class="icon-btn"><i data-lucide="x"></i></button>
+        </div>
+        <div class="sidebar-content">
+            <div class="filter-group">
+                <label>Trier par</label>
+                <select id="filter-sort">
+                    <option value="popularity.desc">Popularité décroissante</option>
+                    <option value="popularity.asc">Popularité croissante</option>
+                    <option value="vote_average.desc">Mieux notés</option>
+                    <option value="primary_release_date.desc">Plus récents</option>
+                    <option value="revenue.desc">Plus gros revenus</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Année de sortie</label>
+                <input type="number" id="filter-year" placeholder="ex: 2024" min="1900" max="2100">
+            </div>
+            
+            <div class="filter-group">
+                <label>Note minimum : <span id="filter-vote-val">0</span>/10</label>
+                <input type="range" id="filter-vote" min="0" max="10" step="1" value="0">
+            </div>
+
+            <div class="filter-group">
+                <label>Langue Originale</label>
+                <select id="filter-lang">
+                    <option value="">Toutes</option>
+                    <option value="en">Anglais</option>
+                    <option value="fr">Français</option>
+                    <option value="ja">Japonais</option>
+                    <option value="ko">Coréen</option>
+                    <option value="es">Espagnol</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Genres</label>
+                <div id="filter-genres" class="genres-grid">
+                    <!-- Checkboxes will be injected here -->
+                </div>
+            </div>
+            
+            <button id="apply-filters-btn" class="btn primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                Appliquer les filtres
+            </button>
+            <button id="reset-filters-btn" class="btn" style="width: 100%; justify-content: center; margin-top: 0.5rem;">
+                Réinitialiser
+            </button>
+        </div>
+    </div>
+
+    <!-- Overlay for Sidebar -->
+    <div id="sidebar-overlay" class="overlay"></div>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i data-lucide="film"></i>
+            <span>Cine'Mines</span>
+        </div>
+        
+        <div class="nav-center">
+            <button id="open-filter-btn" class="icon-btn tooltip" data-tooltip="Filtres"><i data-lucide="sliders-horizontal"></i></button>
+            <div class="global-search">
+                <input type="text" id="global-search-input" placeholder="Rechercher un film...">
+                <button id="global-search-btn"><i data-lucide="search"></i></button>
+            </div>
+        </div>
+
+        <div class="nav-links">
+            <a href="#/" class="nav-link" data-route="discovery">Discovery</a>
+            <a href="#/catalog" class="nav-link" data-route="catalog">Catalogue</a>
+            <a href="#/settings" class="nav-link" data-route="settings">Paramètres</a>
+        </div>
+    </nav>
+
+    <main id="app-content">
+        <!-- Views will be rendered here -->
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,3 +1,55 @@
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyAiMoMoaZnjCiIPLgpqGOhgY1h6RTsoJEU",
+    authDomain: "cinema-fc14a.firebaseapp.com",
+    projectId: "cinema-fc14a",
+    storageBucket: "cinema-fc14a.firebasestorage.app",
+    messagingSenderId: "263722060197",
+    appId: "1:263722060197:web:4b2b78b0dde5f53e96c04c",
+    measurementId: "G-0HJ0ZB5KM3"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let currentUser = null;
+
+// Auth State Observer
+auth.onAuthStateChanged(async (user) => {
+    currentUser = user;
+    if (user) {
+        try {
+            const docRef = db.collection("catalogs").doc(user.uid);
+            const docSnap = await docRef.get();
+            // Dans Firebase v8 / compat, exists est une propriété, mais dans v9 c'est une fonction.
+            // On vérifie donc la présence des données directement pour être robuste.
+            const data = docSnap.data ? docSnap.data() : null;
+            
+            if (data && data.tierlist) {
+                STATE.tierlist = data.tierlist;
+                saveStateToLocal();
+                if (window.location.hash === '#/catalog' || window.location.hash.startsWith('#/tier/')) {
+                    handleRoute();
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching tierlist:", error);
+            showToast("Erreur lors de la récupération du catalogue depuis le cloud.");
+        }
+    } else {
+        STATE.tierlist = JSON.parse(localStorage.getItem('cinemines_tierlist')) || {
+            'S': [], 'A': [], 'B': [], 'C': [], 'D': [], 'E': [], 'F': [], 'Unviewed': []
+        };
+        if (window.location.hash === '#/catalog' || window.location.hash.startsWith('#/tier/')) {
+            handleRoute();
+        }
+    }
+    if (window.location.hash === '#/settings') {
+        handleRoute();
+    }
+});
+
 // State Management
 const STATE = {
     theme: localStorage.getItem('cinemines_theme') || 'dark',
@@ -44,7 +96,28 @@ const openFilterBtn = document.getElementById('open-filter-btn');
 const closeSidebarBtn = document.getElementById('close-sidebar-btn');
 
 // Save State
+let saveTimeout;
+
 function saveState() {
+    saveStateToLocal();
+    
+    if (currentUser) {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(async () => {
+            try {
+                await db.collection("catalogs").doc(currentUser.uid).set({
+                    tierlist: STATE.tierlist,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } catch (error) {
+                console.error("Error saving to Firestore:", error);
+                showToast("Erreur lors de la sauvegarde cloud.");
+            }
+        }, 1000);
+    }
+}
+
+function saveStateToLocal() {
     localStorage.setItem('cinemines_theme', STATE.theme);
     localStorage.setItem('cinemines_api_key', STATE.tmdbApiKey);
     localStorage.setItem('cinemines_watch_url', STATE.watchUrl);
@@ -271,10 +344,34 @@ async function fetchGenres() {
 
 // Views Renderers
 function renderSettings(container) {
+    const authUI = currentUser ? `
+        <div class="form-group" style="padding: 15px; background: rgba(0,255,0,0.05); border: 1px solid var(--border-color); border-radius: 8px;">
+            <h3>Compte Connecté</h3>
+            <p style="margin: 10px 0;">Email : <strong>${currentUser.email}</strong></p>
+            <button id="logout-btn" class="btn" style="width: 100%; justify-content: center;">Se déconnecter</button>
+        </div>
+    ` : `
+        <div class="form-group" style="padding: 15px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 8px;">
+            <h3>Connexion Cloud</h3>
+            <p style="font-size: 0.9em; margin-bottom: 10px; opacity: 0.8;">Sauvegardez votre catalogue en ligne.</p>
+            <input type="email" id="auth-email" placeholder="Email" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color);">
+            <input type="password" id="auth-password" placeholder="Mot de passe" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color);">
+            <div style="display: flex; gap: 10px;">
+                <button id="login-btn" class="btn primary" style="flex: 1; justify-content: center;">Connexion</button>
+                <button id="register-btn" class="btn" style="flex: 1; justify-content: center;">S'inscrire</button>
+            </div>
+            <button id="google-login-btn" class="btn" style="width: 100%; justify-content: center; margin-top: 10px; background-color: #fff; color: #757575; border: 1px solid #ddd;">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width: 18px; height: 18px; margin-right: 8px;" alt="Google Logo">
+                Continuer avec Google
+            </button>
+        </div>
+    `;
+
     container.innerHTML = `
         <div class="view active settings-container">
             <h2>Paramètres</h2>
             <br>
+            ${authUI}
             <div class="form-group">
                 <label>Clé API TMDB</label>
                 <input type="text" id="api-key-input" value="${STATE.tmdbApiKey}" placeholder="Entrez votre clé API v3">
@@ -308,6 +405,36 @@ function renderSettings(container) {
             </div>
         </div>
     `;
+
+    // Auth Event Listeners
+    if (currentUser) {
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            firebase.auth().signOut().then(() => {
+                showToast('Déconnecté avec succès.');
+            }).catch(e => showToast("Erreur : " + e.message));
+        });
+    } else {
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-password').value;
+            firebase.auth().signInWithEmailAndPassword(email, pass).then(() => {
+                showToast('Connexion réussie !');
+            }).catch(e => showToast("Erreur : " + e.message));
+        });
+        document.getElementById('register-btn').addEventListener('click', () => {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-password').value;
+            firebase.auth().createUserWithEmailAndPassword(email, pass).then(() => {
+                showToast('Compte créé avec succès !');
+            }).catch(e => showToast("Erreur : " + e.message));
+        });
+        document.getElementById('google-login-btn').addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider).then(() => {
+                showToast('Connexion Google réussie !');
+            }).catch(e => showToast("Erreur Google : " + e.message));
+        });
+    }
 
     document.getElementById('save-settings-btn').addEventListener('click', () => {
         STATE.tmdbApiKey = document.getElementById('api-key-input').value;
@@ -534,7 +661,9 @@ function renderCatalog(container) {
             <br>
     `;
     
-    for (const rank in STATE.tierlist) {
+    const orderedRanks = ['S', 'A', 'B', 'C', 'D', 'E', 'F', 'Unviewed'];
+    for (const rank of orderedRanks) {
+        if (!STATE.tierlist[rank]) continue;
         html += `
             <div class="tier-row" data-rank="${rank}">
                 <div class="tier-label" style="background-color: ${TIERS_COLORS[rank]};" onclick="window.location.hash='#/tier/${rank}'">

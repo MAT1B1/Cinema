@@ -124,13 +124,53 @@ function handleRoute() {
 window.addEventListener('hashchange', handleRoute);
 
 // Global Search Event Listeners
-globalSearchBtn.addEventListener('click', executeGlobalSearch);
+globalSearchBtn.addEventListener('click', () => executeGlobalSearch());
 globalSearchInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') executeGlobalSearch();
 });
 
-function executeGlobalSearch() {
-    const query = globalSearchInput.value.trim();
+// Mobile Navbar Event Listeners
+const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+const navLinksMenu = document.getElementById('nav-links-menu');
+const mobileSearchToggle = document.getElementById('mobile-search-toggle');
+const mobileSearchContainer = document.getElementById('mobile-search-container');
+const mobileSearchInput = document.getElementById('mobile-search-input');
+const mobileSearchSubmit = document.getElementById('mobile-search-submit');
+
+if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', () => {
+        navLinksMenu.classList.toggle('active');
+        if(mobileSearchContainer) mobileSearchContainer.classList.remove('active');
+    });
+}
+
+if (mobileSearchToggle) {
+    mobileSearchToggle.addEventListener('click', () => {
+        mobileSearchContainer.classList.toggle('active');
+        if(navLinksMenu) navLinksMenu.classList.remove('active');
+        if (mobileSearchContainer.classList.contains('active')) {
+            mobileSearchInput.focus();
+        }
+    });
+}
+
+if (mobileSearchSubmit) {
+    mobileSearchSubmit.addEventListener('click', () => {
+        executeGlobalSearch(mobileSearchInput.value);
+        mobileSearchContainer.classList.remove('active');
+    });
+}
+if (mobileSearchInput) {
+    mobileSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            executeGlobalSearch(mobileSearchInput.value);
+            mobileSearchContainer.classList.remove('active');
+        }
+    });
+}
+
+function executeGlobalSearch(customQuery) {
+    const query = (typeof customQuery === 'string' ? customQuery : globalSearchInput.value).trim();
     if (query) {
         discoveryState.query = query;
         // Reset filters when doing a text search (TMDB limitation: search endpoint doesn't support complex filters well)
@@ -760,8 +800,8 @@ async function renderMoviePage(container, id) {
                                 <option value="F" ${currentRank === 'F' ? 'selected' : ''}>Rang F</option>
                                 <option value="Unviewed" ${currentRank === 'Unviewed' ? 'selected' : ''}>Pas vu</option>
                             </select>
-                            <a href="${watchUrl}" target="_blank" class="btn primary">
-                                <i data-lucide="play"></i> Regarder
+                            <a href="${watchUrl}" target="_blank" class="btn primary" title="Regarder">
+                                <i data-lucide="play"></i> <span class="desktop-only">Regarder</span>
                             </a>
                             <a href="${downloadUrl}" target="_blank" class="btn" title="Télécharger">
                                 <i data-lucide="download"></i>

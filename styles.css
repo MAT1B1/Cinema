@@ -824,32 +824,100 @@ body {
 
 /* Responsive Media Queries */
 @media (max-width: 768px) {
+    /* Utility Classes */
+    .mobile-only {
+        display: flex !important;
+    }
+    .desktop-only {
+        display: none !important;
+    }
+
     /* Navbar styling for mobile */
+    .navbar {
+        padding: 0 10px;
+        gap: 5px;
+    }
     .nav-brand {
         width: auto;
+        font-size: 1.2rem;
+        flex: 1;
     }
     .nav-brand span {
-        display: none;
+        display: inline;
     }
     .nav-center {
-        margin: 0 10px;
+        margin: 0;
+        flex: 0;
+        gap: 5px;
     }
     .nav-links {
-        position: fixed;
-        bottom: 0;
+        display: none;
+        position: absolute;
+        top: 70px;
+        right: 0;
+        width: 200px;
+        background-color: var(--surface-color);
+        flex-direction: column;
+        border: 1px solid var(--border-color);
+        border-right: none;
+        border-top: none;
+        border-radius: 0 0 0 8px;
+        padding: 10px 0;
+        box-shadow: -4px 4px 15px rgba(0,0,0,0.5);
+        justify-content: flex-start;
+    }
+    .nav-links.active {
+        display: flex;
+        animation: fadeIn 0.2s ease;
+    }
+    .nav-link {
+        padding: 15px 20px;
+        width: 100%;
+        text-align: left;
+    }
+    
+    /* Mobile Search Container */
+    .mobile-search-container {
+        position: absolute;
+        top: 70px;
         left: 0;
         width: 100%;
-        background-color: var(--nav-bg);
-        backdrop-filter: blur(10px);
-        justify-content: space-around;
-        padding: 10px 0;
-        border-top: 1px solid var(--border-color);
-        z-index: 1000;
-        margin: 0;
+        background-color: var(--surface-color);
+        padding: 15px;
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        display: none;
+        align-items: center;
+        gap: 10px;
+        z-index: 999;
+    }
+    .mobile-search-container.active {
+        display: flex;
+        animation: fadeIn 0.2s ease;
+    }
+    .mobile-search-container input {
+        flex: 1;
+        padding: 12px 15px;
+        border-radius: 30px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-color);
+        color: var(--text-color);
+        outline: none;
+    }
+    .mobile-search-container button {
+        background: var(--primary-color);
+        border: none;
+        color: white;
+        padding: 12px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     #app-content {
-        margin-bottom: 60px; /* Space for the bottom nav bar */
+        margin-bottom: 0;
     }
 
     /* Movies Grid */

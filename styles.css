@@ -966,6 +966,24 @@ body {
         width: 100%;
         max-width: 320px;
     }
+    
+    /* Tierlist Mobile */
+    .tier-row {
+        min-height: auto;
+    }
+    .tier-label {
+        width: 50px;
+        font-size: 1.2rem;
+        padding: 5px;
+    }
+    .tier-movies {
+        gap: 10px;
+        padding: 10px;
+    }
+    .tier-movie {
+        width: 80px;
+        height: 120px;
+    }
 }
 
 @media (max-width: 480px) {

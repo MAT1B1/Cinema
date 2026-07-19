@@ -57,6 +57,7 @@ const STATE = {
     watchUrl: localStorage.getItem('cinemines_watch_url') || 'https://vfstreaming.com/recherche?q=%s',
     downloadUrl: localStorage.getItem('cinemines_download_url') || 'https://wawacity.com/recherche?q=%s',
     youtubeEmbedType: localStorage.getItem('cinemines_youtube_embed') || 'thumbnail',
+    urlSearchType: localStorage.getItem('cinemines_url_search_type') || 'title',
     tierlist: JSON.parse(localStorage.getItem('cinemines_tierlist')) || {
         'S': [], 'A': [], 'B': [], 'C': [], 'D': [], 'E': [], 'F': [], 'Unviewed': []
     }
@@ -123,6 +124,7 @@ function saveStateToLocal() {
     localStorage.setItem('cinemines_watch_url', STATE.watchUrl);
     localStorage.setItem('cinemines_download_url', STATE.downloadUrl);
     localStorage.setItem('cinemines_youtube_embed', STATE.youtubeEmbedType);
+    localStorage.setItem('cinemines_url_search_type', STATE.urlSearchType);
     localStorage.setItem('cinemines_tierlist', JSON.stringify(STATE.tierlist));
     applyTheme();
 }
@@ -385,6 +387,13 @@ function renderSettings(container) {
                 <input type="text" id="download-url-input" value="${STATE.downloadUrl}" placeholder="https://example.com/download?q=%s">
             </div>
             <div class="form-group">
+                <label>Variable de recherche (%s)</label>
+                <select id="url-search-type-select" class="input-field" style="width: 100%; padding: 12px; background-color: var(--surface-color); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 8px;">
+                    <option value="title" ${STATE.urlSearchType === 'title' ? 'selected' : ''}>Nom du film</option>
+                    <option value="id" ${STATE.urlSearchType === 'id' ? 'selected' : ''}>ID du film (TMDB)</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Style du Lecteur Bande-Annonce</label>
                 <select id="youtube-embed-select" class="input-field" style="width: 100%; padding: 12px; background-color: var(--surface-color); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 8px;">
                     <option value="thumbnail" ${STATE.youtubeEmbedType === 'thumbnail' ? 'selected' : ''}>Miniature interactive (Nouvel onglet, anti-extensions sécurisé)</option>
@@ -441,6 +450,7 @@ function renderSettings(container) {
         STATE.watchUrl = document.getElementById('watch-url-input').value;
         STATE.downloadUrl = document.getElementById('download-url-input').value;
         STATE.youtubeEmbedType = document.getElementById('youtube-embed-select').value;
+        STATE.urlSearchType = document.getElementById('url-search-type-select').value;
         saveState();
         fetchGenres(); // Fetch genres if api key just added
         showToast('Paramètres enregistrés !');
@@ -886,8 +896,9 @@ async function renderMoviePage(container, id) {
             else if (ytVideos.length > 0) trailerKey = ytVideos[0].key;
         }
         
-        const watchUrl = STATE.watchUrl.replace('%s', encodeURIComponent(movie.title));
-        const downloadUrl = STATE.downloadUrl.replace('%s', encodeURIComponent(movie.title));
+        const searchValue = STATE.urlSearchType === 'id' ? movie.id : encodeURIComponent(movie.title);
+        const watchUrl = STATE.watchUrl.replace('%s', searchValue);
+        const downloadUrl = STATE.downloadUrl.replace('%s', searchValue);
         
         const backdropPath = movie.backdrop_path 
             ? `${BACKDROP_BASE_URL}${movie.backdrop_path}` 
